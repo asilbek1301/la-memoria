@@ -1,32 +1,32 @@
 {
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
-  "sourceRoot": "apps/nestar-api/src",
+  "sourceRoot": "apps/la-memoria-api/src",
   "compilerOptions": {
     "deleteOutDir": true,
     "webpack": false,
-    "tsConfigPath": "apps/nestar-api/tsconfig.app.json"
+    "tsConfigPath": "apps/la-memoria-api/tsconfig.app.json"
   },
   "monorepo": true,
-  "root": "apps/nestar-api",
+  "root": "apps/la-memoria-api",
   "projects": {
-    "nestar-api": {
+    "la-memoria-api": {
       "type": "application",
-      "root": "apps/nestar-api",
+      "root": "apps/la-memoria-api",
       "entryFile": "main",
-      "sourceRoot": "apps/nestar-api/src",
+      "sourceRoot": "apps/la-memoria-api/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/nestar-api/tsconfig.app.json"
+        "tsConfigPath": "apps/la-memoria-api/tsconfig.app.json"
       }
     },
-    "nestar-batch": {
+    "la-memoria-batch": {
       "type": "application",
-      "root": "apps/nestar-batch",
+      "root": "apps/la-memoria-batch",
       "entryFile": "main",
-      "sourceRoot": "apps/nestar-batch/src",
+      "sourceRoot": "apps/la-memoria-batch/src",
       "compilerOptions": {
         "webpack": true,
-        "tsConfigPath": "apps/nestar-batch/tsconfig.app.json"
+        "tsConfigPath": "apps/la-memoria-batch/tsconfig.app.json"
       }
     }
   }

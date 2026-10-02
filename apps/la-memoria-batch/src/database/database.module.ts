@@ -16,10 +16,10 @@ export class DatabaseModule {
 	constructor(@InjectConnection() private readonly connection: Connection) {
 		if (connection.readyState === 1) {
 			console.log(
-				`\n=== MongoDB is connected into ${process.env.NODE_ENV === 'production' ? 'production' : 'development'} db ===\n`,
+				`\n=== La Memoria MongoDB is connected into ${process.env.NODE_ENV === 'production' ? 'production' : 'development'} db ===\n`,
 			);
 		} else {
-			console.log('DB is not connected!');
+			console.log('La Memoria DB is not connected!');
 		}
 	}
 }
