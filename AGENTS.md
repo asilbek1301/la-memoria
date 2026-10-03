@@ -6,10 +6,10 @@ La Memoria is a NestJS GraphQL monorepo migrated from Real estate platform into 
 
 Before changing code, read the current AI handoff docs:
 
-- `docs/BACKEND_MIGRATION.md`
-- `docs/DECISIONS.md`
-- `docs/COMPLETED_TASKS.md`
-- `docs/NEXT_STEPS.md`
+- `docs/ai/BACKEND_MIGRATION.md`
+- `docs/ai/DECISIONS.md`
+- `docs/ai/COMPLETED_TASKS.md`
+- `docs/ai/NEXT_STEPS.md`
 
 Use those files as the source of truth for AI Agent related migration history, accepted decisions, remaining work and validation status.
 
@@ -18,7 +18,7 @@ Use those files as the source of truth for AI Agent related migration history, a
 - Backend apps are `la-memoria-api` and `la-memoria-batch`.
 - Keep the existing NestJS resolver/service/module pattern based on MVC and DI.
 - Keep DTOs, enums, schemas under `apps/la-memoria-api/src/libs`.
-  Keep shared modules reusable: auth, member, like, view, comment, follow, board article, socket.
+- Keep shared modules reusable: auth, member, like, view, comment, follow, board article, socket.
 
 ## Domain Rules
 
