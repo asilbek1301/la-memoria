@@ -1,6 +1,6 @@
 # Architectural Decisions: Nestar → La Memoria
 
-_Last updated: 2026-10-03_
+_Last updated: 2026-10-04_
 
 Status key: ✅ Accepted · 🟡 Accepted, not yet implemented · ❓ Open
 
@@ -9,16 +9,17 @@ Status key: ✅ Accepted · 🟡 Accepted, not yet implemented · ❓ Open
 | ID | Decision | Status |
 |---|---|---|
 | D1 | Keep Nestar's architecture and data model 1:1 | ✅ |
-| D2 | A studio is a `Member` (`memberType: STUDIO`), not a separate collection | 🟡 |
-| D3 | Property → Package, owned by the studio's `memberId` | 🟡 |
+| D2 | A studio is a `Member` (`memberType: STUDIO`), not a separate collection | ✅ |
+| D3 | Property → Package, owned by the studio's `memberId` | ✅ |
 | D4 | Migrate in layers; Layer 1 is a pure rename with no logic change | ✅ |
 | D5 | Rename the monorepo apps to `la-memoria-api` / `la-memoria-batch` | ✅ |
 | D6 | Fresh La Memoria database, no data migration script | 🟡 |
-| D7 | `packages` field mapping | ❓ (session proposal vs ER diagram) |
+| D7 | `packages` field mapping: ER diagram, typos fixed | ✅ |
 | D8 | Lint tooling: install ESLint 9 deps; lint without `--fix`; do not fix existing findings in L1 | ✅ |
-| D9 | Leave inherited Nestar bugs unfixed in L1 | ✅ |
+| D9 | Leave inherited Nestar bugs unfixed in L1 (fixed in L2) | ✅ |
 | D10 | No git commits unless the user asks explicitly | ✅ |
-| D11 | `reservations` collection | ❓ |
+| D11 | `reservations` collection: in scope, built | ✅ |
+| D12 | Package status lifecycle and `memberPackages` counting | ✅ |
 
 ---
 
@@ -58,7 +59,7 @@ Status key: ✅ Accepted · 🟡 Accepted, not yet implemented · ❓ Open
 - **Risks:** if the Layer 2 code runs against the old Nestar DB, data silently disappears from queries (`AGENT` and `PROPERTY` values, the `properties` collection).
 - **Alternatives:** a one-off Mongo script to rename the collection, fields and enum values.
 
-### D7: `packages` field mapping (OPEN)
+### D7: `packages` field mapping (ACCEPTED 2026-10-04)
 - **Session proposal** (chosen in Q&A): `propertySquare→packageDuration`, `propertyBeds→packagePhotos`, `propertyRooms→packageOutfits`, `propertyBarter/Rent→packageAlbum/packageVideo`, `SOLD→PAUSE` with `soldAt→pausedAt`, `constructedAt` removed. Type values `PRE_WEDDING/WEDDING_DAY/STUDIO/OUTDOOR`.
 - **ER diagram** (`../La-MemoriaER.pdf`) differs: it adds `packageStyle` enum, `packageDress` and `packageMakeup` bools, and `packageReservations`. It has no outfits or video, and it still names `propertyViews/Likes/Comments/Images` (likely typos).
 - **Why open:** the two sources conflict. The ER diagram is probably the owner's newer intent, but its typos should not be copied.
@@ -81,7 +82,22 @@ Status key: ✅ Accepted · 🟡 Accepted, not yet implemented · ❓ Open
 - **Decision:** the agent stages work but does not commit. A commit step in an approved plan is not permission to commit.
 - **Why:** the owner corrected an unrequested commit (it was undone with `git reset --soft HEAD~1`).
 
-### D11: `reservations` collection (OPEN)
+### D11: `reservations` collection (ACCEPTED 2026-10-04)
 - **Context:** the ER diagram includes `reservations` (status, date, price, note, `studioId`, `memberId`, `packageId`, `confirmedAt`/`cancelledAt`/`completedAt`). Earlier guidance said bookings are optional extras outside the 1:1 model.
 - **Risk:** it is a new module with no Nestar counterpart: a new state machine, new notifications and `packageReservations` counters.
 - **Recommendation:** treat it as Layer 4, after the 1:1 migration is stable, and confirm scope with the owner first.
+
+#### D7 outcome
+- The owner supplied the final ER diagram and enum values. **The ER field set is adopted**, with `propertyViews/Likes/Comments/Images` fixed to `package*`.
+- `PackageType { PEARL, GOLD, DIAMOND }`, `PackageStatus { HOLD, ACTIVE, PAUSE, DELETE }`, `PackageStyle { CLASSIC, MODERN, VINTAGE, ROMANTIC }`, `PackageLocation`: the same 9 cities.
+- `pausedAt` replaces Nestar's `soldAt`. It isn't in the ER diagram, but it is kept to mirror the Nestar lifecycle (owner choice).
+
+#### D11 outcome
+- The owner chose to build `reservations` now. `ReservationStatus { PENDING, CONFIRMED, CANCELLED, COMPLETED }`; these values were proposed by the agent from the ER timestamps.
+- The ER `reservations.notificationDesc` is treated as a copy-paste error and is not built.
+- `studioId` and `reservationPrice` are taken from the package at create time, never from client input.
+
+### D12: Package status lifecycle
+- **Decision:** `memberPackages` counts a studio's ACTIVE packages. Leaving ACTIVE (to HOLD, PAUSE or DELETE) is −1, and returning to ACTIVE is +1. PAUSE sets `pausedAt`; DELETE sets `deletedAt`. Studios and admins can update any non-DELETE package.
+- **Why:** Nestar allowed updates only on ACTIVE listings, and its `soldAt` was destructured into a local variable and never saved. With PAUSE and HOLD, that would leave a package stuck with no way back to ACTIVE.
+- **Risks:** the counter drifts if a package is changed directly in the DB.

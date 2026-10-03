@@ -1,6 +1,8 @@
 # Next Steps (priority order)
 
-_Written 2026-10-03, for the next working session_
+_Written 2026-10-03, updated 2026-10-04_
+
+> **Done 2026-10-04:** P0 #2 (D7), P0 #3 (D11), backend cleanup #1, #2, #4, #5 and #8. Next up: commit the L2–L4 work (owner), run the playground smoke flow, fix the `LoggingInterceptor` (cleanup #3), then the frontend migration.
 
 ## P0: Unblock
 

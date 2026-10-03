@@ -1,6 +1,6 @@
 # Backend Migration: Nestar → La Memoria
 
-_Last updated: 2026-10-03 · Branch: `modification` · Status: Layer 1 (rename) done and staged, not committed_
+_Last updated: 2026-10-04 · Branch: `modification` · Status: L1 committed; L2 + L3 + L4 implemented, uncommitted_
 
 ## 1. Original project: Nestar
 
@@ -29,10 +29,10 @@ Turn Nestar into La Memoria by **reusing the architecture 1:1** and changing onl
 
 | Layer | Scope | Status |
 |---|---|---|
-| **L1: Safe rename** | Nestar → La Memoria for project, app, package and label identifiers. No API, schema or logic change. | ✅ Done, staged (uncommitted) |
-| **L2: Domain rename** | Property → Package, Agent → Studio across enums, schemas, DTOs, services, resolvers, GraphQL operations and batch | ⏳ Planned |
-| **L3: Domain fields** | Real-estate fields → photoshoot fields (see §7). Resolve the ER-diagram differences first. | ⏳ Blocked on decision D7 |
-| **L4: Optional extensions** | `reservations` collection, as drawn in `La-MemoriaER.pdf` | ❓ Undecided (D11) |
+| **L1: Safe rename** | Nestar → La Memoria for project, app, package and label identifiers. No API, schema or logic change. | ✅ Done, committed |
+| **L2: Domain rename** | Property → Package, Agent → Studio across enums, schemas, DTOs, services, resolvers, GraphQL operations and batch | ✅ Done (2026-10-04) |
+| **L3: Domain fields** | Real-estate fields → photoshoot fields (see §7). Resolve the ER-diagram differences first. | ✅ Done, ER field set (D7) |
+| **L4: Optional extensions** | `reservations` collection, as drawn in `La-MemoriaER.pdf` | ✅ Done (D11) |
 
 ## 4. Naming changes
 
@@ -50,7 +50,7 @@ Turn Nestar into La Memoria by **reusing the architecture 1:1** and changing onl
 | DB log label | `=== MongoDB is connected into … db ===` | `=== La Memoria MongoDB is connected into … db ===` |
 | Batch e2e import | `NestarBatchModule` (did not exist) | `BatchModule` |
 
-### 4.2 Planned for Layer 2
+### 4.2 Done in Layer 2
 
 | Kind | Before | After |
 |---|---|---|
@@ -65,7 +65,7 @@ Turn Nestar into La Memoria by **reusing the architecture 1:1** and changing onl
 
 ## 5. Module changes
 
-| Module | Layer 1 | Layer 2 (planned) |
+| Module | Layer 1 | Layer 2 (done) |
 |---|---|---|
 | `components/property/*` | path only | → `components/package/*` (`PackageModule`, `PackageResolver`, `PackageService`, `packageStatsEditor`) |
 | `components/member/*` | path only | `getAgents` → `getStudios`; `@Roles(USER, AGENT)` → `@Roles(USER, STUDIO)` |
@@ -80,7 +80,7 @@ Turn Nestar into La Memoria by **reusing the architecture 1:1** and changing onl
 
 **Layer 1 changed nothing in the GraphQL schema.** The running API still serves `getProperties`, `getAgents`, `getMember`, and so on; this was checked against the live schema.
 
-Layer 2 operation renames:
+Layer 2 operation renames (done; verified by introspection on 2026-10-04):
 
 | Nestar operation | La Memoria operation | Guard / role |
 |---|---|---|
@@ -104,14 +104,14 @@ All member, board-article, comment, follow and notice operations keep their name
 
 ### 7.1 Collections
 
-| Collection | Layer 1 | Planned |
+| Collection | Layer 1 | Layer 2–4 (done) |
 |---|---|---|
 | `properties` | unchanged | → `packages` |
 | `members` | unchanged | `memberProperties` → `memberPackages`; `memberType` value `AGENT` → `STUDIO` |
-| `notifications` | unchanged | `propertyId` (ref `Property`) → `packageId` (ref `Package`) |
+| `notifications` | unchanged | `propertyId`/`articleId` → `notificationRefId` (per ER); `authorId` optional |
 | `likes`, `views`, `comments` | unchanged | group value `PROPERTY` → `PACKAGE` |
 | `boardArticles`, `follows`, `notices` | unchanged | unchanged |
-| `reservations` | — | present in the ER diagram only; see D11 |
+| `reservations` | — | **new**: see §9 |
 
 ### 7.2 `packages` schema: two sources that disagree (decision D7)
 
@@ -148,3 +148,16 @@ The `reservations` collection in the diagram also has a likely copy-paste error:
   - `LoggingInterceptor` returns `undefined` for HTTP requests, so every REST route (for example `GET /`) responds 500 ([Logging.interceptor.ts](../apps/la-memoria-api/src/libs/interceptor/Logging.interceptor.ts)). GraphQL is not affected.
   - `getAllPropertiesByAdmin` filters on `match.propertyLocationList`, which is not a field, so the admin location filter never matches ([property.service.ts](../apps/la-memoria-api/src/components/property/property.service.ts)).
   - `getProperties` has a leftover `console.log('match:')`.
+
+> **Resolved (2026-10-04):** the ER column of §7.2 was adopted, with the `property*` typos fixed, plus `pausedAt`. The inherited bugs listed in §8 are fixed in L2: the admin location filter now uses `packageLocation`, the stray `console.log` is gone, and `soldAt`/`pausedAt` is now actually saved. The `LoggingInterceptor` REST 500 is **not** fixed yet.
+
+## 9. Reservations (Layer 4)
+
+| Item | Detail |
+|---|---|
+| Collection | `reservations`: `reservationStatus`, `reservationDate`, `reservationPrice`, `reservationNote?`, `studioId`, `memberId`, `packageId`, `confirmedAt?`, `cancelledAt?`, `completedAt?`, timestamps. Unique index `{ packageId, memberId, reservationDate }` |
+| Enum | `ReservationStatus { PENDING, CONFIRMED, CANCELLED, COMPLETED }` |
+| Operations | `createReservation` (USER), `getMyReservations` (USER), `getStudioReservations` (STUDIO), `updateReservation` (Auth; the role and ownership check runs in the service), `getAllReservationsByAdmin` (ADMIN) |
+| Rules | Package must be ACTIVE and the date must be in the future. Price and studio are copied from the package. Transitions: PENDING→CONFIRMED/CANCELLED, CONFIRMED→COMPLETED/CANCELLED. Only the owning studio confirms or completes; the studio or the couple can cancel |
+| Counters | `packageReservations` +1 on create, −1 on cancel |
+| Files | `components/reservation/*`, `libs/dto/reservation/*`, `libs/enums/reservation.enum.ts`, `schemas/Reservation.model.ts`, `lookupPackage` in `libs/config.ts` |

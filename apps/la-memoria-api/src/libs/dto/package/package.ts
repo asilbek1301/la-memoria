@@ -1,76 +1,79 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 import type { ObjectId } from 'mongoose';
-import { PropertyLocation, PropertyStatus, PropertyType } from '../../enums/property.enum';
+import { PackageLocation, PackageStatus, PackageStyle, PackageType } from '../../enums/package.enum';
 import { Member, TotalCounter } from '../member/member';
 import { MeLiked } from '../like/like';
 
 @ObjectType()
-export class Property {
+export class Package {
 	@Field(() => String)
 	_id: ObjectId;
 
-	@Field(() => PropertyType)
-	propertyType: PropertyType;
+	@Field(() => PackageType)
+	packageType: PackageType;
 
-	@Field(() => PropertyStatus)
-	propertyStatus: PropertyStatus;
+	@Field(() => PackageStatus)
+	packageStatus: PackageStatus;
 
-	@Field(() => PropertyLocation)
-	propertyLocation: PropertyLocation;
+	@Field(() => PackageStyle)
+	packageStyle: PackageStyle;
+
+	@Field(() => PackageLocation)
+	packageLocation: PackageLocation;
 
 	@Field(() => String)
-	propertyAddress: string;
+	packageAddress: string;
 
 	@Field(() => String)
-	propertyTitle: string;
+	packageTitle: string;
 
 	@Field(() => Number)
-	propertyPrice: number;
+	packagePrice: number;
 
 	@Field(() => Number)
-	propertySquare: number;
+	packageDuration: number;
 
 	@Field(() => Int)
-	propertyBeds: number;
+	packagePhotos: number;
 
 	@Field(() => Int)
-	propertyRooms: number;
+	packageViews: number;
 
 	@Field(() => Int)
-	propertyViews: number;
+	packageLikes: number;
 
 	@Field(() => Int)
-	propertyLikes: number;
+	packageComments: number;
 
 	@Field(() => Int)
-	propertyComments: number;
+	packageReservations: number;
 
 	@Field(() => Int)
-	propertyRank: number;
+	packageRank: number;
 
 	@Field(() => [String])
-	propertyImages: string[];
+	packageImages: string[];
 
 	@Field(() => String, { nullable: true })
-	propertyDesc?: string;
+	packageDesc?: string;
 
 	@Field(() => Boolean)
-	propertyBarter: boolean;
+	packageAlbum: boolean;
 
 	@Field(() => Boolean)
-	propertyRent: boolean;
+	packageDress: boolean;
+
+	@Field(() => Boolean)
+	packageMakeup: boolean;
 
 	@Field(() => String)
 	memberId: ObjectId;
 
 	@Field(() => Date, { nullable: true })
-	soldAt?: Date;
+	pausedAt?: Date;
 
 	@Field(() => Date, { nullable: true })
 	deletedAt?: Date;
-
-	@Field(() => Date, { nullable: true })
-	constructedAt?: Date;
 
 	@Field(() => Date)
 	createdAt: Date;
@@ -88,9 +91,9 @@ export class Property {
 }
 
 @ObjectType()
-export class Properties {
-	@Field(() => [Property])
-	list: Property[];
+export class Packages {
+	@Field(() => [Package])
+	list: Package[];
 
 	@Field(() => [TotalCounter], { nullable: true })
 	metaCounter: TotalCounter[];

@@ -18,7 +18,7 @@ Use those files as the source of truth for AI Agent related migration history, a
 - Backend apps are `la-memoria-api` and `la-memoria-batch`.
 - Keep the existing NestJS resolver/service/module pattern based on MVC and DI.
 - Keep DTOs, enums, schemas under `apps/la-memoria-api/src/libs`.
-- Keep shared modules reusable: auth, member, like, view, comment, follow, board article, socket.
+- Keep shared modules reusable: auth, member, like, view, comment, follow, board article, reservation, socket.
 
 ## Domain Rules
 
@@ -28,9 +28,11 @@ Use those files as the source of truth for AI Agent related migration history, a
 - Package ownership continues to use `MemberType.STUDIO` unless a later migration explicity changes it.
 - Package enum values are:
   - `PackageType`: `PEARL`, `GOLD`, `DIAMOND`
-  - `packageStatus`: `HOLD` `ACTIVE` `PAUSE` `DELETE`
+  - `PackageStatus`: `HOLD`, `ACTIVE`, `PAUSE`, `DELETE`
   - `PackageStyle`: `CLASSIC`, `MODERN`, `VINTAGE`, `ROMANTIC`
   - `PackageLocation`: `SEOUL`, `BUSAN`, `INCHEON`, `DAEGU`, `GYEONGJU`, `GWANGJU`, `CHONJU`, `DAEJON`, `JEJU`
+- `ReservationStatus`: `PENDING`, `CONFIRMED`, `CANCELLED`, `COMPLETED` (PENDING→CONFIRMED|CANCELLED, CONFIRMED→COMPLETED|CANCELLED).
+- `memberPackages` counts a studio's ACTIVE packages; `packageReservations` counts non-cancelled reservations.
 
 ## Workflow
 
@@ -47,7 +49,9 @@ Use these checks for backend work:
 ```bash
 npx tsc -p apps/la-memoria-api/tsconfig.app.json --noEmit
 npx tsc -p apps/la-memoria-batch/tsconfig.app.json --noEmit
-npx run build
+npm run build
+npm run build:batch
+npx jest
 ```
 
 `npm run lint` runs ESLint with `--fix`, so use it only when file rewriting is acceptable!

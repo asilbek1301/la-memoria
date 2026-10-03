@@ -53,3 +53,39 @@ Top lint findings by rule: `prettier/prettier` 90, `no-unsafe-member-access` 66,
 - The target folders `apps/la-memoria-*` already existed as **empty directory skeletons**, so the first `git mv` nested the apps. I deleted the empty directories (after confirming they held no files) and moved the apps up a level.
 - I ran an unnecessary `git stash` / `stash apply`. The tree was checked against the stash before dropping it, and nothing was lost.
 - I made an unrequested commit (`336d422`), then reverted it with `git reset --soft HEAD~1`. The changes remain staged.
+
+---
+
+# Completed Tasks: 2026-10-04 session
+
+_Branch: `modification` · L1 was already committed (`4d9677c`). **This session's work is staged / in the working tree and not committed** (D10)._
+
+## 1. Layer 2 + 3: Property → Package (ER field set)
+
+| Area | Change |
+|---|---|
+| Enums | `property.enum.ts` → `package.enum.ts`: `PackageType` PEARL/GOLD/DIAMOND, `PackageStatus` HOLD/ACTIVE/PAUSE/DELETE, `PackageStyle` (new), `PackageLocation`. `*Group.PROPERTY` → `.PACKAGE` (comment, like, view, notification) |
+| Schema | `Property.model.ts` → `Package.model.ts`, collection `packages`, ER fields (`packageDuration`, `packagePhotos`, `packageReservations`, `packageAlbum/Dress/Makeup`, `pausedAt`); real-estate fields removed |
+| DTOs | `dto/property/*` → `dto/package/*`: `Package(s)`, `PackageInput`, `PackageUpdate`, `PackagesInquiry` (adds `styleList`, `photosList`, `durationsRange`), `StudioPackagesInquiry`, `AllPackagesInquiry` |
+| Component | `components/property` → `components/package`: every operation renamed (see BACKEND_MIGRATION.md §6) |
+| Shared | like/view: `getFavoritePackages`/`getVisitedPackages` with `from: 'packages'`; comment injects `PackageService`; `memberProperties` → `memberPackages`; notification uses `notificationRefId` |
+| Config | `availablePackageSorts`, `availableOptions` (album/dress/makeup), `favoritePackage`/`visitedPackage` aliases |
+| Bug fixes | admin location filter (`packageLocation`), stray `console.log`, `pausedAt`/`deletedAt` now saved, PAUSE/HOLD can be reactivated (D12) |
+
+## 2. AGENT → STUDIO
+`MemberType { USER, STUDIO, ADMIN }`; `getAgents` → `getStudios`, `AgentsInquiry` → `StudiosInquiry`, `availableStudioSorts`. Batch: `'Package'` model, `BATCH_TOP_PACKAGES`/`BATCH_TOP_STUDIOS`, `batchTopPackages`/`batchTopStudios`.
+
+## 3. Layer 4: Reservations module
+New `ReservationModule` (see BACKEND_MIGRATION.md §9).
+
+## 4. Validation
+
+| Check | Result |
+|---|---|
+| `npx tsc --noEmit` (API and batch) | ✅ exit 0 |
+| `npm run build`, `npm run build:batch` | ✅ |
+| `npx jest` (new `package.service.spec.ts`, `reservation.service.spec.ts`) | ✅ 14/14 |
+| `git grep -i -E "propert\|agent" -- apps` | ✅ 0 matches |
+| API boot plus GraphQL introspection | ✅ the new operations and enum values are present |
+| Lint on touched files | ⚠️ the existing Nestar patterns remain (`no-unsafe-*`, `(returns) =>`, `err.message`); no new rule categories |
+| Playground write smoke flow | ⏭️ not run: it would write to the Atlas `La-Memoria` DB without the owner's approval |

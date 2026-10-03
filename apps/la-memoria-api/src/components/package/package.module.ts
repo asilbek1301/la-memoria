@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { PropertyResolver } from './property.resolver';
-import { PropertyService } from './property.service';
+import { PackageResolver } from './package.resolver';
+import { PackageService } from './package.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import PropertySchema from '../../schemas/Property.model';
+import PackageSchema from '../../schemas/Package.model';
 import { AuthModule } from '../auth/auth.module';
 import { ViewModule } from '../view/view.module';
 import { MemberModule } from '../member/member.module';
@@ -12,8 +12,8 @@ import { LikeModule } from '../like/like.module';
 	imports: [
 		MongooseModule.forFeature([
 			{
-				name: 'Property',
-				schema: PropertySchema,
+				name: 'Package',
+				schema: PackageSchema,
 			},
 		]),
 		AuthModule,
@@ -21,7 +21,7 @@ import { LikeModule } from '../like/like.module';
 		MemberModule,
 		LikeModule,
 	],
-	providers: [PropertyResolver, PropertyService],
-	exports: [PropertyService],
+	providers: [PackageResolver, PackageService],
+	exports: [PackageService],
 })
-export class PropertyModule {}
+export class PackageModule {}

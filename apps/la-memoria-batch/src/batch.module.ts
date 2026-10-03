@@ -5,7 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MongooseModule } from '@nestjs/mongoose';
-import PropertySchema from 'apps/la-memoria-api/src/schemas/Property.model';
+import PackageSchema from 'apps/la-memoria-api/src/schemas/Package.model';
 import MemberSchema from 'apps/la-memoria-api/src/schemas/Member.model';
 
 @Module({
@@ -13,7 +13,7 @@ import MemberSchema from 'apps/la-memoria-api/src/schemas/Member.model';
 		ConfigModule.forRoot(),
 		DatabaseModule,
 		ScheduleModule.forRoot(),
-		MongooseModule.forFeature([{ name: 'Property', schema: PropertySchema }]),
+		MongooseModule.forFeature([{ name: 'Package', schema: PackageSchema }]),
 		MongooseModule.forFeature([{ name: 'Member', schema: MemberSchema }]),
 	],
 	controllers: [BatchController],

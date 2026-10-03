@@ -1,78 +1,76 @@
 import { Field, InputType, Int } from '@nestjs/graphql';
 import { IsInt, IsNotEmpty, IsOptional, Length, Min } from 'class-validator';
-import { PropertyLocation, PropertyStatus, PropertyType } from '../../enums/property.enum';
+import { PackageLocation, PackageStatus, PackageStyle, PackageType } from '../../enums/package.enum';
 import type { ObjectId } from 'mongoose';
 
 @InputType()
-export class PropertyUpdate {
+export class PackageUpdate {
 	@IsNotEmpty()
 	@Field(() => String)
 	_id: ObjectId;
 
 	@IsOptional()
-	@Field(() => PropertyType, { nullable: true })
-	propertyType?: PropertyType;
+	@Field(() => PackageType, { nullable: true })
+	packageType?: PackageType;
 
 	@IsOptional()
-	@Field(() => PropertyStatus, { nullable: true })
-	propertyStatus?: PropertyStatus;
+	@Field(() => PackageStatus, { nullable: true })
+	packageStatus?: PackageStatus;
 
 	@IsOptional()
-	@Field(() => PropertyLocation, { nullable: true })
-	propertyLocation?: PropertyLocation;
+	@Field(() => PackageStyle, { nullable: true })
+	packageStyle?: PackageStyle;
+
+	@IsOptional()
+	@Field(() => PackageLocation, { nullable: true })
+	packageLocation?: PackageLocation;
 
 	@IsOptional()
 	@Length(3, 100)
 	@Field(() => String, { nullable: true })
-	propertyAddress?: string;
+	packageAddress?: string;
 
 	@IsOptional()
 	@Length(3, 100)
 	@Field(() => String, { nullable: true })
-	propertyTitle?: string;
+	packageTitle?: string;
 
 	@IsOptional()
 	@Field(() => Number, { nullable: true })
-	propertyPrice?: number;
+	packagePrice?: number;
 
 	@IsOptional()
 	@Field(() => Number, { nullable: true })
-	propertySquare?: number;
+	packageDuration?: number;
 
 	@IsOptional()
 	@IsInt()
 	@Min(1)
 	@Field(() => Int, { nullable: true })
-	propertyBeds?: number;
-
-	@IsOptional()
-	@IsInt()
-	@Min(1)
-	@Field(() => Int, { nullable: true })
-	propertyRooms?: number;
+	packagePhotos?: number;
 
 	@IsOptional()
 	@Field(() => [String], { nullable: true })
-	propertyImages?: string[];
+	packageImages?: string[];
 
 	@IsOptional()
 	@Length(5, 500)
 	@Field(() => String, { nullable: true })
-	propertyDesc?: string;
+	packageDesc?: string;
 
 	@IsOptional()
 	@Field(() => Boolean, { nullable: true })
-	propertyBarter?: boolean;
+	packageAlbum?: boolean;
 
 	@IsOptional()
 	@Field(() => Boolean, { nullable: true })
-	propertyRent?: boolean;
+	packageDress?: boolean;
 
-	soldAt?: Date;
+	@IsOptional()
+	@Field(() => Boolean, { nullable: true })
+	packageMakeup?: boolean;
+
+	pausedAt?: Date;
 
 	deletedAt?: Date;
-
-	@IsOptional()
-	@Field(() => Date, { nullable: true })
-	constructedAt?: Date;
 }
