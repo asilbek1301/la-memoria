@@ -2,7 +2,7 @@
 
 _Last updated: 2026-10-03 · Repo: `../la-memoria-next` (Next.js 14.2 pages router, Apollo Client 3, MUI, next-i18next en/kr/ru)_
 
-Current state: **the frontend has not been migrated yet.** Its last commit is `20674cb feat: start client migration process`. It still has `"name": "nestar-next"` and "Nestar" in 16 files.
+Current state (2026-10-05): **steps 1–9 are implemented** in `la-memoria-next` (uncommitted), plus the Reservations UI. See COMPLETED_TASKS.md, 2026-10-05 session.
 
 ## Step-by-step plan
 

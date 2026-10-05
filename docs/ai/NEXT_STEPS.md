@@ -1,6 +1,8 @@
 # Next Steps (priority order)
 
-_Written 2026-10-03, updated 2026-10-04_
+_Written 2026-10-03, updated 2026-10-05_
+
+> **Done 2026-10-05:** the whole frontend migration (rows 1–6 below) plus the Reservations UI. Next up: the owner reviews and commits `la-memoria-next`; a browser write-flow smoke test (studio creates a package → couple reserves → studio confirms/completes); replace the real-estate banner/type images.
 
 > **Done 2026-10-04:** P0 #2 (D7), P0 #3 (D11), backend cleanup #1, #2, #4, #5 and #8. Next up: commit the L2–L4 work (owner), run the playground smoke flow, fix the `LoggingInterceptor` (cleanup #3), then the frontend migration.
 

@@ -89,3 +89,41 @@ New `ReservationModule` (see BACKEND_MIGRATION.md §9).
 | API boot plus GraphQL introspection | ✅ the new operations and enum values are present |
 | Lint on touched files | ⚠️ the existing Nestar patterns remain (`no-unsafe-*`, `(returns) =>`, `err.message`); no new rule categories |
 | Playground write smoke flow | ⏭️ not run: it would write to the Atlas `La-Memoria` DB without the owner's approval |
+
+---
+
+# Completed Tasks: 2026-10-05 session (frontend)
+
+_Repo: `la-memoria-next` · Branch: `modification` · **Changes are in the working tree / staged moves, not committed** (D10)_
+
+Before this session, the backend L2–L4 had been committed (`b23425b`), and the frontend still targeted the Nestar schema, so every package/agent/member page failed at runtime.
+
+## 1. Phases (per FRONTEND_MIGRATION.md)
+
+| Phase | Change |
+|---|---|
+| 0 Baseline | `yarn tsc --noEmit` ✅, `yarn build` ✅ before any edit |
+| 1 Brand | `package.json` → `la-memoria-next`; titles/meta in 3 layouts; Footer; `_document` SEO (en/ru/kr); join/community labels; `NESTAR … MOBILE` placeholders |
+| 2 Contract | `libs/enums/package.enum.ts` (PEARL/GOLD/DIAMOND, HOLD/ACTIVE/PAUSE/DELETE, PackageStyle, PackageLocation), `reservation.enum.ts`; `libs/types/package/*`, `libs/types/reservation/*`; `MemberType.STUDIO`; `*Group.PACKAGE`; `memberPackages`; `StudiosInquiry`; config `availableOptions` (album/dress/makeup), `packageDurations`, `packagePhotosList`, `topPackageRank`. Old `property` enum/types deleted |
+| 3 Renames | `git mv`: `pages/property→package`, `pages/agent→studio`, `_admin/properties→packages`, `components/property→package`, `agent→studio`, `AgentCard→StudioCard`, `PropertyBigCard→PackageBigCard`, homepage `*Properties/*Agents→*Packages/*Studios`, mypage/member/admin package components, matching SCSS files and imports. Token rename Property→Package / Agent→Studio across TS/TSX/SCSS (asset paths and `userAgent` protected); identifier `property` → `pkg` via TS AST (`package` is a reserved word) |
+| 4 GraphQL + consumers | All operations/args per BACKEND_MIGRATION §6; selection sets use ER fields (`packageDuration/Photos/Style/Album/Dress/Makeup/Reservations`, `pausedAt`). Cards/detail show photos, style, duration (h), Album/Dress/Makeup. `Filter`/`HeaderFilter`: style, edited photos, duration range, album/dress/makeup; year-built filter removed. `AddNewPackage` form: style, duration, photos, album/dress/makeup; upload `target: 'package'`. Status lifecycle (D12): studio tabs Active/Paused/On Hold + status menu; admin tabs Hold/Paused + menu for any non-DELETE |
+| 5 Terminology | `public/locales/{en,kr,ru}` rewritten for new keys; FAQ package/couples/studios content rewritten; About, Footer, MyMenu ("Saved Packages", "Recently Viewed"), join role "Couple" |
+| 6 Reservations | gql `CREATE_RESERVATION`, `UPDATE_RESERVATION`, `GET_MY_RESERVATIONS`, `GET_STUDIO_RESERVATIONS`, `GET_ALL_RESERVATIONS_BY_ADMIN`; package detail: the placeholder contact form is replaced by a working reservation form (date, note); `mypage?category=myReservations` (couple: cancel · studio: confirm/complete/cancel); `/_admin/reservations` read-only list with status tabs |
+
+## 2. Validation
+
+| Check | Result |
+|---|---|
+| `yarn tsc --noEmit` | ✅ 0 errors |
+| `yarn build` | ✅ all 22 routes, including `/package`, `/studio`, `/_admin/packages`, `/_admin/reservations` |
+| All 41 gql documents validated against the live `:3007` schema (introspection) | ✅ 0 invalid |
+| Read-only runtime queries with the pages' real default inputs (filters, sorts, studios) | ✅ accepted by the backend validators |
+| `next start` + every route | ✅ 200; `/property`, `/agent` → 404; `/kr`, `/ru` locales render |
+| Leftover terms `propert|agent|nestar|barter|…` in `apollo libs pages scss` | ✅ only the two banner asset filenames (`properties.png`, `agents.webp`) |
+| Write flows (create package, reserve, confirm) in the browser | ⏭️ not run: they write to the Atlas DB, so they need the owner's go-ahead |
+
+## 3. Notes / known gaps
+- Asset placeholders: homepage type tiles reuse `apartment/villa/house.webp` for PEARL/GOLD/DIAMOND, and the banners still use `properties.png` / `agents.webp`. Replace them with wedding artwork.
+- Detail page amenity icons still use `bed.svg`/`room.svg`/`expand.svg` for photos/style/duration.
+- Some CSS class names were renamed together with the SCSS (`package-*`, `studio-*`), and they stay consistent with each other.
+- Pre-existing, untouched: mobile views are placeholders; the unused stub `getPackagesRefetch` at the end of `pages/studio/detail.tsx`.
