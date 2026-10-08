@@ -29,6 +29,28 @@ export class MemberInput {
 	memberAuthType?: MemberAuthType;
 }
 
+/** Sign in with Google. The first time, nickname, phone and account type finish the new account **/
+@InputType()
+export class GoogleAuthInput {
+	@IsNotEmpty()
+	@Field(() => String)
+	idToken: string;
+
+	@IsOptional()
+	@Length(3, 12)
+	@Field(() => String, { nullable: true })
+	memberNick?: string;
+
+	@IsOptional()
+	@IsNotEmpty()
+	@Field(() => String, { nullable: true })
+	memberPhone?: string;
+
+	@IsOptional()
+	@Field(() => MemberType, { nullable: true })
+	memberType?: MemberType;
+}
+
 @InputType()
 export class LoginInput {
 	@IsNotEmpty()

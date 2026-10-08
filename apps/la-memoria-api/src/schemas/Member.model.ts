@@ -36,7 +36,17 @@ const MemberSchema = new Schema(
 		memberPassword: {
 			type: String,
 			select: false,
-			required: true,
+			// members who sign in with Google have no password
+			required: function (this: { memberAuthType?: string }) {
+				return this.memberAuthType !== MemberAuthType.GOOGLE;
+			},
+		},
+
+		// the Google account id ("sub") of members who sign in with Google
+		memberGoogleId: {
+			type: String,
+			index: { unique: true, sparse: true },
+			select: false,
 		},
 
 		memberFullName: {

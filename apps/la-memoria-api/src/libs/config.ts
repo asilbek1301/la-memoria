@@ -14,6 +14,7 @@ export const availablePackageSorts = [
 export const availableBoardArticleSorts = ['createdAt', 'updatedAt', 'articleLikes', 'articleViews'];
 export const availableCommentSorts = ['createdAt', 'updatedAt'];
 export const availableReservationSorts = ['createdAt', 'updatedAt', 'reservationDate', 'reservationPrice'];
+export const availableNoticeSorts = ['createdAt', 'updatedAt'];
 
 /** IMAGE CONFIGURATION **/
 import { v4 as uuidv4 } from 'uuid';
@@ -103,6 +104,16 @@ export const lookupMember = {
 		localField: 'memberId',
 		foreignField: '_id',
 		as: 'memberData',
+	},
+};
+
+/** the member who caused a notification **/
+export const lookupAuthor = {
+	$lookup: {
+		from: 'members',
+		localField: 'authorId',
+		foreignField: '_id',
+		as: 'authorData',
 	},
 };
 

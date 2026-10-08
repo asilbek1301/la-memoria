@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { NoticeCategory, NoticeStatus } from '../libs/enums/notice.enum';
+import { NoticeCategory, NoticeStatus, NoticeTopic } from '../libs/enums/notice.enum';
 
 const NoticeSchema = new Schema(
 	{
@@ -13,6 +13,12 @@ const NoticeSchema = new Schema(
 			type: String,
 			enum: NoticeStatus,
 			default: NoticeStatus.ACTIVE,
+		},
+
+		// FAQ only: which Help topic the question belongs to
+		noticeTopic: {
+			type: String,
+			enum: NoticeTopic,
 		},
 
 		noticeTitle: {

@@ -8,6 +8,8 @@ import { ViewModule } from '../view/view.module';
 import { MemberModule } from '../member/member.module';
 import { LikeModule } from '../like/like.module';
 
+import { NotificationModule } from '../notification/notification.module';
+
 @Module({
 	imports: [
 		MongooseModule.forFeature([
@@ -20,6 +22,7 @@ import { LikeModule } from '../like/like.module';
 		ViewModule,
 		MemberModule,
 		LikeModule,
+		NotificationModule,
 	],
 	providers: [PackageResolver, PackageService],
 	exports: [PackageService],

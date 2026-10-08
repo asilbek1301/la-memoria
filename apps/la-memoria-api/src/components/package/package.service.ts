@@ -21,6 +21,8 @@ import { lookupAuthMemberLiked, lookupMember, shapeIntoMongoObjectId } from '../
 import { LikeService } from '../like/like.service';
 import { LikeInput } from '../../libs/dto/like/like.input';
 import { LikeGroup } from '../../libs/enums/like.enum';
+import { NotificationService } from '../notification/notification.service';
+import { NotificationGroup, NotificationType } from '../../libs/enums/notification.enum';
 
 @Injectable()
 export class PackageService {
@@ -29,6 +31,7 @@ export class PackageService {
 		private readonly memberService: MemberService,
 		private readonly viewService: ViewService,
 		private readonly likeService: LikeService,
+		private readonly notificationService: NotificationService,
 	) {}
 
 	public async createPackage(input: PackageInput): Promise<Package> {
@@ -200,6 +203,16 @@ export class PackageService {
 		const result = await this.packageStatsEditor({ _id: likeRefId, targetKey: 'packageLikes', modifier: modifier });
 
 		if (!result) throw new InternalServerErrorException(Message.SOMETHING_WENT_WRONG);
+		if (modifier > 0) {
+			await this.notificationService.notify({
+				notificationType: NotificationType.LIKE,
+				notificationGroup: NotificationGroup.PACKAGE,
+				notificationTitle: `liked your package "${target.packageTitle}"`,
+				notificationRefId: likeRefId,
+				authorId: memberId,
+				receiverId: target.memberId,
+			});
+		}
 
 		return result;
 	}

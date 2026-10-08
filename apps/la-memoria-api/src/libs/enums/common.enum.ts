@@ -19,6 +19,10 @@ export enum Message {
 	NOT_ALLOWED_REQUEST = 'Not Allowed Request!',
 	PROVIDE_ALLOWED_FORMAT = 'Please provide jpg, jpeg, or png images!',
 	SELF_SUBSCRIPTION_DENIED = 'Self subscription is denied!',
+	GOOGLE_AUTH_FAILED = 'Google sign-in could not be verified!',
+	GOOGLE_SIGNUP_REQUIRED = 'Google sign-up needs more details!',
+	USE_GOOGLE_LOGIN = 'This account signs in with Google!',
+	TOO_MANY_INQUIRIES = 'You have sent several messages in a short time. Please try again in a few minutes.',
 }
 
 export enum Direction {

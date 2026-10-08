@@ -6,9 +6,14 @@ import { JwtModule } from '@nestjs/jwt';
 @Module({
 	imports: [
 		HttpModule,
-		JwtModule.register({
-			secret: `${process.env.SECRET_TOKEN}`,
-			signOptions: { expiresIn: '30d' },
+		// read the secret when the module starts, after ConfigModule has loaded .env (reading it at import time gave the
+		// string "undefined", so anyone could sign a valid token); no secret means the server must not start
+		JwtModule.registerAsync({
+			useFactory: () => {
+				const secret = process.env.SECRET_TOKEN;
+				if (!secret) throw new Error('SECRET_TOKEN is missing in .env');
+				return { secret, signOptions: { expiresIn: '30d' } };
+			},
 		}),
 	],
 	providers: [AuthService],

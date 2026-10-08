@@ -5,6 +5,7 @@ import { ReservationService } from './reservation.service';
 import ReservationSchema from '../../schemas/Reservation.model';
 import { AuthModule } from '../auth/auth.module';
 import { PackageModule } from '../package/package.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
 	imports: [
@@ -16,6 +17,7 @@ import { PackageModule } from '../package/package.module';
 		]),
 		AuthModule,
 		PackageModule,
+		NotificationModule,
 	],
 	providers: [ReservationResolver, ReservationService],
 	exports: [ReservationService],

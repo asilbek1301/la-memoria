@@ -2,8 +2,14 @@ import { BadRequestException, Injectable, InternalServerErrorException } from '@
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, ObjectId } from 'mongoose';
 import { Member, Members } from '../../libs/dto/member/member';
-import { StudiosInquiry, LoginInput, MemberInput, MembersInquiry } from '../../libs/dto/member/member.input';
-import { MemberStatus, MemberType } from '../../libs/enums/member.enum';
+import {
+	StudiosInquiry,
+	GoogleAuthInput,
+	LoginInput,
+	MemberInput,
+	MembersInquiry,
+} from '../../libs/dto/member/member.input';
+import { MemberAuthType, MemberStatus, MemberType } from '../../libs/enums/member.enum';
 import { Direction, Message } from '../../libs/enums/common.enum';
 import { AuthService } from '../auth/auth.service';
 import { MemberUpdate } from '../../libs/dto/member/member.update';
@@ -13,6 +19,8 @@ import { StatisticModifier, T } from '../../libs/types/common';
 import { LikeInput } from '../../libs/dto/like/like.input';
 import { LikeGroup } from '../../libs/enums/like.enum';
 import { LikeService } from '../like/like.service';
+import { NotificationService } from '../notification/notification.service';
+import { NotificationGroup, NotificationType } from '../../libs/enums/notification.enum';
 import { Follower, Following, MeFollowed } from '../../libs/dto/follow/follow';
 import { lookupAuthMemberLiked } from '../../libs/config';
 
@@ -24,9 +32,12 @@ export class MemberService {
 		private authService: AuthService,
 		private viewService: ViewService,
 		private likeService: LikeService,
+		private notificationService: NotificationService,
 	) {}
 
 	public async signup(input: MemberInput): Promise<Member> {
+		// only couples (USER) and studios can sign up; admin accounts are never created from the public form or API
+		if (input.memberType === MemberType.ADMIN) throw new BadRequestException(Message.NOT_ALLOWED_REQUEST);
 		input.memberPassword = await this.authService.hashPassword(input.memberPassword);
 
 		try {
@@ -50,12 +61,50 @@ export class MemberService {
 			throw new InternalServerErrorException(Message.BLOCKED_USER);
 		}
 
+		// Google members have no password; they log in with the Google button
+		if (response.memberAuthType === MemberAuthType.GOOGLE && !response.memberPassword) {
+			throw new InternalServerErrorException(Message.USE_GOOGLE_LOGIN);
+		}
 		const isMatch = await this.authService.comparePasswords(input.memberPassword, response.memberPassword as string);
 		if (!isMatch) throw new InternalServerErrorException(Message.WRONG_PASSWORD);
 
 		response.accessToken = await this.authService.createToken(response);
 
 		return response;
+	}
+
+	/** Sign in with Google: logs in a linked member, or creates one once nickname, phone and account type are given **/
+	public async googleAuth(input: GoogleAuthInput): Promise<Member> {
+		const google = await this.authService.verifyGoogleToken(input.idToken);
+		if (!google) throw new BadRequestException(Message.GOOGLE_AUTH_FAILED);
+
+		// 1. a member already linked to this Google account logs in
+		const linked = await this.memberModel.findOne({ memberGoogleId: google.googleId }).exec();
+		if (linked) {
+			if (linked.memberStatus === MemberStatus.DELETE) throw new InternalServerErrorException(Message.NO_MEMBER_NICK);
+			if (linked.memberStatus === MemberStatus.BLOCK) throw new InternalServerErrorException(Message.BLOCKED_USER);
+			linked.accessToken = await this.authService.createToken(linked);
+			return linked;
+		}
+
+		// 2. a new Google user first chooses a nickname, phone and account type (the frontend shows that step)
+		if (!input.memberNick || !input.memberPhone) throw new BadRequestException(Message.GOOGLE_SIGNUP_REQUIRED);
+		if (input.memberType === MemberType.ADMIN) throw new BadRequestException(Message.NOT_ALLOWED_REQUEST);
+
+		try {
+			const created = await this.memberModel.create({
+				memberNick: input.memberNick,
+				memberPhone: input.memberPhone,
+				memberType: input.memberType ?? MemberType.USER,
+				memberAuthType: MemberAuthType.GOOGLE,
+				memberGoogleId: google.googleId,
+			});
+			created.accessToken = await this.authService.createToken(created);
+			return created;
+		} catch (err) {
+			console.log('Error, Service.model:', err.message);
+			throw new BadRequestException(Message.USED_MEMBER_NICK_OR_PHONE);
+		}
 	}
 
 	public async updateMember(memberId: ObjectId, input: MemberUpdate): Promise<Member> {
@@ -154,6 +203,16 @@ export class MemberService {
 		const result = await this.memberStatsEditor({ _id: likeRefId, targetKey: 'memberLikes', modifier: modifier });
 
 		if (!result) throw new InternalServerErrorException(Message.SOMETHING_WENT_WRONG);
+		if (modifier > 0) {
+			await this.notificationService.notify({
+				notificationType: NotificationType.LIKE,
+				notificationGroup: NotificationGroup.MEMBER,
+				notificationTitle: target.memberType === MemberType.STUDIO ? 'liked your studio' : 'liked your profile',
+				notificationRefId: likeRefId,
+				authorId: memberId,
+				receiverId: likeRefId,
+			});
+		}
 
 		return result;
 	}
