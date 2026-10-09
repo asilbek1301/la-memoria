@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, ObjectId } from 'mongoose';
-import { BoardArticle, BoardArticles } from '../../libs/dto/board-article/board-article';
+import { BoardArticle, BoardArticleNeighbors, BoardArticles } from '../../libs/dto/board-article/board-article';
 import { MemberService } from '../member/member.service';
 import { ViewService } from '../view/view.service';
 import {
@@ -73,6 +73,30 @@ export class BoardArticleService {
 		targetBoardArticle.memberData = await this.memberService.getMember(null, targetBoardArticle.memberId);
 
 		return targetBoardArticle;
+	}
+
+	public async getBoardArticleNeighbors(articleId: ObjectId): Promise<BoardArticleNeighbors> {
+		const current: BoardArticle | null = await this.boardArticleModel
+			.findOne({ _id: articleId, articleStatus: BoardArticleStatus.ACTIVE })
+			.lean()
+			.exec();
+		if (!current) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
+
+		const sameCategory: T = { articleCategory: current.articleCategory, articleStatus: BoardArticleStatus.ACTIVE };
+		const [previous, next] = await Promise.all([
+			this.boardArticleModel
+				.findOne({ ...sameCategory, createdAt: { $lt: current.createdAt } })
+				.sort({ createdAt: Direction.DESC })
+				.lean()
+				.exec(),
+			this.boardArticleModel
+				.findOne({ ...sameCategory, createdAt: { $gt: current.createdAt } })
+				.sort({ createdAt: Direction.ASC })
+				.lean()
+				.exec(),
+		]);
+
+		return { previous: previous ?? undefined, next: next ?? undefined };
 	}
 
 	public async updateBoardArticle(memberId: ObjectId, input: BoardArticleUpdate): Promise<BoardArticle> {

@@ -17,7 +17,7 @@ export class BoardArticleInput {
 	articleTitle: string;
 
 	@IsNotEmpty()
-	@Length(3, 250)
+	@Length(3, 5000) // the editor's HTML: text, formatting and photo tags
 	@Field(() => String)
 	articleContent: string;
 

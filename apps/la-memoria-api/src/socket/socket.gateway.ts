@@ -84,6 +84,8 @@ export class SocketGateway implements OnGatewayInit {
 	@SubscribeMessage('message')
 	public async handleMessage(client: any, payload: any): Promise<void> {
 		const authMember = this.clientsAuthMap.get(client);
+		// only logged-in members can write; guests can read. Empty messages are dropped
+		if (!authMember || typeof payload !== 'string' || !payload.trim()) return;
 		const newMessage: MessagePayload = { event: 'message', text: payload, memberData: authMember! };
 
 		const clientNick: string = authMember?.memberNick ?? 'Guest';

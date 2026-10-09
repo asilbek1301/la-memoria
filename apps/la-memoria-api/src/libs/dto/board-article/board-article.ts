@@ -51,6 +51,18 @@ export class BoardArticle {
 	memberData?: Member;
 }
 
+/** the posts just before and after one post in the same category (by date) **/
+@ObjectType()
+export class BoardArticleNeighbors {
+	/** the next older post */
+	@Field(() => BoardArticle, { nullable: true })
+	previous?: BoardArticle;
+
+	/** the next newer post */
+	@Field(() => BoardArticle, { nullable: true })
+	next?: BoardArticle;
+}
+
 @ObjectType()
 export class BoardArticles {
 	@Field(() => [BoardArticle])

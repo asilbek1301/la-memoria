@@ -32,29 +32,7 @@ export class CommentService {
 			throw new BadRequestException(Message.CREATE_FAILED);
 		}
 
-		switch (input.commentGroup) {
-			case CommentGroup.PACKAGE:
-				await this.packageService.packageStatsEditor({
-					_id: input.commentRefId,
-					targetKey: 'packageComments',
-					modifier: 1,
-				});
-				break;
-			case CommentGroup.ARTICLE:
-				await this.boardArticleService.boardArticleStatsEditor({
-					_id: input.commentRefId,
-					targetKey: 'articleComments',
-					modifier: 1,
-				});
-				break;
-			case CommentGroup.MEMBER:
-				await this.memberService.memberStatsEditor({
-					_id: input.commentRefId,
-					targetKey: 'memberComments',
-					modifier: 1,
-				});
-				break;
-		}
+		await this.commentCountEditor(input.commentGroup, input.commentRefId, 1);
 
 		if (!result) throw new InternalServerErrorException(Message.CREATE_FAILED);
 
@@ -76,7 +54,27 @@ export class CommentService {
 		).exec();
 		if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);
 
+		// a deleted comment no longer counts on its package, post or member
+		if (input.commentStatus === CommentStatus.DELETE) {
+			await this.commentCountEditor(result.commentGroup, result.commentRefId, -1);
+		}
+
 		return result;
+	}
+
+	/** keeps packageComments / articleComments / memberComments in step with the active comments **/
+	private async commentCountEditor(group: CommentGroup, refId: ObjectId, modifier: number): Promise<void> {
+		switch (group) {
+			case CommentGroup.PACKAGE:
+				await this.packageService.packageStatsEditor({ _id: refId, targetKey: 'packageComments', modifier });
+				break;
+			case CommentGroup.ARTICLE:
+				await this.boardArticleService.boardArticleStatsEditor({ _id: refId, targetKey: 'articleComments', modifier });
+				break;
+			case CommentGroup.MEMBER:
+				await this.memberService.memberStatsEditor({ _id: refId, targetKey: 'memberComments', modifier });
+				break;
+		}
 	}
 
 	public async getComments(memberId: ObjectId, input: CommentsInquiry): Promise<Comments> {

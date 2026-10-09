@@ -19,7 +19,7 @@ export class BoardArticleUpdate {
 	articleTitle?: string;
 
 	@IsOptional()
-	@Length(3, 250)
+	@Length(3, 5000) // the editor's HTML: text, formatting and photo tags
 	@Field(() => String, { nullable: true })
 	articleContent?: string;
 

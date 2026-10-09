@@ -676,3 +676,50 @@ Before this session, the backend L2–L4 had been committed (`b23425b`), and the
     - Browser at 1440 and 390 with real notifications: no bell when logged out; badge 3; panel text; a click opens the package and the badge drops to 2; mark all clears it; no page errors.
     - All test likes, reservations and notifications removed and counts restored.
     - backend tsc ✅, frontend tsc ✅, frontend lint 0 errors ✅, build ✅. (The backend's strict type-aware lint already fails in many untouched files; the new code follows the same patterns.)
+- **Community post page redesigned (`/community/detail?id=…`).** It was still the nestar-next page (banner, old boxes and popups; phones showed only "COMMUNITY DETAIL PAGE MOBILE"). User's choices: posts up to 5,000 characters, fix the comment count, add previous / next, Delete only (no edit form yet).
+  - **Backend:**
+    - `BoardArticleInput` / `BoardArticleUpdate`: `articleContent` `@Length(3, 5000)` (was 250 characters of HTML: one photo tag used about 100).
+    - New `getBoardArticleNeighbors(articleId)` (`WithoutGuard`) returns `{ previous, next }`: the next older and next newer active post in the same category.
+    - `CommentService.updateComment`: deleting a comment now lowers `articleComments` / `packageComments` / `memberComments` (it never did). The +1 and −1 share one `commentCountEditor`.
+  - **Security:** post HTML is shown through Toast UI's viewer, which cleans it with DOMPurify (scripts, styles, forms, `on…` attributes removed). The old `TViewer` had custom renderers for `iframe` and `div`, and registering `iframe` told the cleaner to allow iframes from any site. They are removed; verified: an `<iframe>` and an `<img onerror>` in a post are stripped and no script runs.
+  - **Frontend:**
+    - `pages/community/detail.tsx` rewritten on `withLayoutFull` (root `#community-detail-page.detail-page.community-detail`):
+      - breadcrumb "Community / <category>" (to the list with that category selected)
+      - 720px reading column: category label, large title, byline (photo or initial, name to the studio or member page, date, views above 0), "Delete" for the author with an inline "Delete this post?" confirmation, which returns to the category list
+      - cover photo (only when the post has one) up to 1080px wide; the copy of it inside the text is left out (`withoutCover`)
+      - text at 18px / 1.7 with styled headings, links, lists, quotes, photos, code and tables; long words wrap; photos that fail to load are hidden
+      - `ReactionRail`: like (logged out → login and back), comment count (jumps to `#comments`), copy link ("Link copied"). A sticky column left of the text on desktop, a row under the text on phones.
+      - comments, previous / next post, "More in <category>" (up to 3 shared `CommunityCard`s, hidden when none)
+      - a skeleton in the page's shape; "This post doesn't exist or was removed." with "Back to Community" (the request is quiet, so no popup)
+    - `CommentsSection` (shared with the package and studio pages): Edit in place and Delete with an inline confirmation for your own comments; the section has `id="comments"`.
+    - `TViewer` simplified (viewer CSS only, no custom renderers). `communitySearch.ts`: `categoryHref`, `withoutCover`. Editor counter: 5,000.
+    - Removed: the old 418-line `pc/community/detail.scss` (replaced by the layout) and the `/community/detail` banner case in `LayoutBasic`.
+    - Styles: looks under `.community-detail` and comment-action looks under `.detail-page` in `pc/general.scss`; tokens `$reading-width`, `$reading-size`, `$reading-line`, `$article-cover-*`, `$rail-gap`; reduced-motion rules.
+  - **Checks:** 26 browser checks, run twice, with a real post created through the API (1,439 characters, headings, list, quote, two photos), then removed with its views, comments and counts:
+    - no banner, breadcrumb, cover wider than the text and not repeated, unsafe HTML stripped, 18px / 1.7 text
+    - sticky rail beside the text; like, unlike, logged-out like → login, "Link copied" with the link on the clipboard
+    - comment post, edit, delete with confirmation; backend comment count back to 0
+    - a post without an image with a `?id`-only link: next post and "More in Free talk"
+    - delete own post → category list, status DELETE; the removed post shows the message without a popup
+    - 1024 (rail fits), 390 (rail row, photos fit), no horizontal overflow at 1440, 1024 and 390; no page errors
+    - package and studio comments still show.
+    - backend tsc ✅, frontend tsc ✅, lint 0 errors ✅, build ✅.
+  - **Still missing:** an edit form for your own post (the backend already supports it); comments are limited to 100 characters by the backend.
+- **Community post page, second design (user: "that looks strange, use a totally different design").** The narrow column with a floating rail left a large empty block beside short posts, a lone "Previous post" link and one placeholder card under "More in".
+  - **Layout:** the post on a white sheet (`.post-sheet`: cover along the top, category, title, "By <name> · date · views", text, and a footer with the actions and "Delete post"), comments under the sheet, and a sticky side column (`PostAside`):
+    - "Written by": photo or initial, name, Studio / Member and post count (above 0), "View studio" / "View profile"
+    - "In <category>": previous / next post rows, the newest posts of the category as text rows (without this post or its neighbours), "All posts in <category>"
+  - Phones: one column (sheet, comments, the two boxes).
+  - `ArticleActions` replaces `ReactionRail` (removed): labelled pills "Like / Liked" with count, "Comments" with count (jumps to `#comments`), "Copy link" → "Link copied".
+  - `GET_BOARD_ARTICLE` also asks for `memberData.memberArticles`. Tokens: `$sheet-bg`, `$sheet-pad(-mobile)`, `$sheet-cover-height(-mobile)`, `$post-aside-width`, `$post-column-gap` (the rail and wide-cover tokens are gone). The reading typography, sanitising, comments, delete and states are unchanged.
+  - **Checks:** 25 browser checks, run twice (same flows as before, plus the side column staying in view and fitting at 1024, and no repeated posts in it); test data removed. tsc ✅, lint 0 errors ✅, build ✅.
+- **Homepage hero: one button by login state.** `HomeHero` reads `userVar`: logged out it shows "Sign up" (to `/account/join?mode=signup`), logged in "Explore packages" (to `/package`), both as the same `button-primary on-dark` pill. Checked at 1440 in both states and at 390; lint 0 errors ✅, build ✅.
+- **Google sign-in: deleted accounts get the right message.** `googleAuth` answers a deleted linked member with `NO_MEMBER_NICK`, which the account page showed as "No account with this nickname." In the Google flow that answer can only mean a deleted account, so `googleLogIn` now passes its own wording to `toAuthError` (`googleMessages`): "This account has been deleted." Password login keeps "No account with this nickname.". Checked with a simulated Google sign-in (deleted and blocked, sign-up and log-in tabs, no popup); tsc ✅, lint ✅. Backend unchanged.
+- **Community chat redesigned (`libs/components/Chat.tsx`, socket in `libs/chat/chatSocket.ts`).** User's choices: leave the sender payload as is (see below), only logged-in members can write, keep the last 5 messages in memory (so no times).
+  - **Backend (approved):** `SocketGateway.handleMessage` ignores messages from guests and empty ones. Nothing else changed.
+  - **Socket:** the chat used the socket opened by Apollo's `WebSocketLink` (no subscriptions exist), opened once with the token at page load, so after logging in the chat still treated the member as a guest. Now `chatSocket.ts` owns one socket outside React (it survives page changes), reconnects when the login token changes and after a dropped connection (1s, 2s, 5s, then every 10s), and exposes reactive vars (messages, online, status, open, unread). Apollo's WebSocketLink, `split` and `socketVar` are removed; every Apollo request goes over HTTP.
+  - **Design:** round espresso button bottom-right with a count of new messages while closed; a 380×560 ivory panel (header "Community chat" with a live dot and "N online" / "Reconnecting…", close); messages grouped by sender with photo or initial and name, your own as espresso bubbles on the right; lines kept, long words wrap; "New messages" when scrolled up; a growing message box (Enter sends, Shift+Enter new line, not while an IME is composing, 500 characters); guests see "Log in to chat" (back to the same page). Phones (the chat was desktop-only before): the button sits above the booking bar, the panel opens full screen.
+  - **Accessibility:** `aria-expanded` button, dialog panel, `role="log"`, Esc closes and returns focus to the button; focus moves into the panel on open (to the close button on touch screens, so the keyboard doesn't pop up). Fixed while testing: the panel's animated `visibility` kept it hidden for the first frame, so focus could not enter; it now shows at once and hides only after the fade.
+  - Styles: looks under `.chat-widget` in `pc/general.scss`, layout in `pc/main.scss` (the old hard-coded `.chatting` block is gone) and `mobile/main.scss`; tokens `$chat-*`; reduced motion.
+  - **Checks:** 15 browser checks, run three times (guest read-only, server ignores guest messages, Esc and focus, Enter / Shift+Enter, own vs others, grouping, long words, unread badge, same connection across pages, phone full screen, no overflow). tsc ✅, lint 0 errors ✅, build ✅.
+  - **Known and left by the user:** every message and join event still carries the sender's whole JWT payload (phone, full name, address) to everyone connected.

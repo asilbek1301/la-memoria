@@ -1,6 +1,6 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { BoardArticleService } from './board-article.service';
-import { BoardArticle, BoardArticles } from '../../libs/dto/board-article/board-article';
+import { BoardArticle, BoardArticleNeighbors, BoardArticles } from '../../libs/dto/board-article/board-article';
 import {
 	AllBoardArticlesInquiry,
 	BoardArticleInput,
@@ -42,6 +42,15 @@ export class BoardArticleResolver {
 		const articleId = shapeIntoMongoObjectId(input);
 
 		return await this.boardArticleService.getBoardArticle(memberId, articleId);
+	}
+
+	@UseGuards(WithoutGuard)
+	@Query(() => BoardArticleNeighbors)
+	public async getBoardArticleNeighbors(@Args('articleId') input: string): Promise<BoardArticleNeighbors> {
+		console.log('Query: getBoardArticleNeighbors');
+		const articleId = shapeIntoMongoObjectId(input);
+
+		return await this.boardArticleService.getBoardArticleNeighbors(articleId);
 	}
 
 	@UseGuards(AuthGuard)
