@@ -1,0 +1,40 @@
+services:
+  la-memoria-api:
+    container_name: la-memoria-api
+    restart: always
+    image: node:20.10.0
+    ports:
+      - 7007:6007
+    volumes:
+      - ./:/usr/src/la-memoria
+    working_dir: /usr/src/la-memoria
+
+    networks:
+      - monorepo-network
+
+    # FOR PRODUCTION
+    command: bash -c "npm install && npm run build && npm run start:prod"
+
+  la-memoria-batch:
+    container_name: la-memoria-batch
+    restart: unless-stopped
+    image: node:20.10.0
+    ports:
+      - 7008:6008
+    volumes:
+      - ./:/usr/src/la-memoria
+    working_dir: /usr/src/la-memoria
+
+    networks:
+      - monorepo-network
+
+    # FOR PRODUCTION
+    command: bash -c "npm install && npm run build:batch && npm run start:prod:batch"
+
+networks:
+  monorepo-network:
+    driver: bridge
+
+# la-memoria-next:  localhost:7077  <=>  container:6077      7077:6077
+# la-memoria-api:   localhost:7007  <=>  container:6007      7007:6007
+# la-memoria-batch: localhost:7008  <=>  container:6008      7008:6008
